@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IECMS — Independent Electoral Commission Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg2: #0f1525;
+      --bg3: #151d30;
+      --border: #1e2d4a;
+      --accent: #00d4aa;
+      --accent2: #f59e0b;
+      --accent3: #ef4444;
+      --accent4: #6366f1;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #475569;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --panel: rgba(15, 21, 37, 0.95);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* BACKGROUND GRID */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 260px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      overflow: hidden;
+    }
+    .sidebar-brand {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    .brand-subtitle {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .nav {
+      flex: 1;
+      padding: 16px 0;
+      overflow-y: auto;
+    }
+    .nav-section {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--text3);
+      text-transform: uppercase;
+      padding: 12px 20px 6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 12px;
+      color: var(--text2);
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active {
+      background: rgba(0,212,170,0.08);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .nav-badge.danger { background: var(--danger); color: white; }
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text3);
+    }
+    .status-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      margin-left: 260px;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 14, 26, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+    }
+    .topbar-title {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .btn-primary:hover { background: #00bfa0; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: var(--bg); }
+    .btn-sm { padding: 5px 10px; font-size: 10px; }
+
+    /* CONTENT */
+    .content {
+      padding: 32px;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* STAT CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .stat-card.green::before { background: var(--accent); }
+    .stat-card.amber::before { background: var(--accent2); }
+    .stat-card.red::before { background: var(--accent3); }
+    .stat-card.indigo::before { background: var(--accent4); }
+    .stat-card:hover { border-color: rgba(0,212,170,0.3); }
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+    .stat-value {
+      font-family: 'Fraunces', serif;
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-card.green .stat-value { color: var(--accent); }
+    .stat-card.amber .stat-value { color: var(--accent2); }
+    .stat-card.red .stat-value { color: var(--accent3); }
+    .stat-card.indigo .stat-value { color: var(--accent4); }
+    .stat-sub { font-size: 11px; color: var(--text2); }
+
+    /* PANELS */
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text2);
+      font-weight: 600;
+    }
+    .panel-body { padding: 20px; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(30,45,74,0.5);
+      color: var(--text2);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0,212,170,0.03); color: var(--text); }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .badge-success { background: rgba(16,185,129,0.15); color: var(--success); }
+    .badge-danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .badge-warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .badge-info { background: rgba(99,102,241,0.15); color: var(--accent4); }
+    .badge-neutral { background: rgba(148,163,184,0.1); color: var(--text2); }
+
+    /* FORM */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-weight: 600;
+    }
+    input, select, textarea {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    select option { background: var(--bg2); }
+
+    /* MODAL */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.2s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-title {
+      font-family: 'Fraunces', serif;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .modal-subtitle { font-size: 11px; color: var(--text2); margin-bottom: 24px; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ELIGIBILITY CHECKER */
+    .checker-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(30,45,74,0.5);
+    }
+    .check-row:last-child { border-bottom: none; }
+    .check-icon { font-size: 16px; width: 20px; }
+
+    /* PROGRESS BAR */
+    .progress-wrap { margin-top: 8px; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text3);
+      margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    /* ALERT */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .alert-info { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; }
+    .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--warning); }
+    .alert-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+    .alert-danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+
+    /* RESULTS CHART */
+    .results-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(30,45,74,0.4);
+    }
+    .results-bar-row:last-child { border-bottom: none; }
+    .results-name { width: 180px; font-size: 12px; flex-shrink: 0; }
+    .results-party { font-size: 10px; color: var(--text3); }
+    .results-bar-wrap { flex: 1; }
+    .results-bar-bg { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+    .results-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+    .results-votes { width: 80px; text-align: right; font-size: 12px; color: var(--accent); font-weight: 600; }
+    .results-pct { width: 50px; text-align: right; font-size: 11px; color: var(--text3); }
+
+    /* TABS */
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+    .tab {
+      padding: 10px 20px;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      color: var(--text3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .tab:hover { color: var(--text2); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* TIMELINE */
+    .timeline { padding-left: 20px; }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 20px;
+      padding-left: 20px;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -1px; top: 6px;
+      width: 1px; bottom: 0;
+      background: var(--border);
+    }
+    .timeline-item:last-child::before { display: none; }
+    .timeline-dot {
+      position: absolute;
+      left: -5px; top: 4px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg2);
+    }
+    .timeline-dot.warn { background: var(--warning); }
+    .timeline-dot.danger { background: var(--danger); }
+    .timeline-time { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+    .timeline-text { font-size: 12px; color: var(--text2); }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 12px;
+      z-index: 9999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+      max-width: 320px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-color: var(--success); color: var(--success); }
+    #toast.error { border-color: var(--danger); color: var(--danger); }
+    #toast.warning { border-color: var(--warning); color: var(--warning); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .sidebar { width: 60px; }
+      .sidebar-brand .brand-name,
+      .sidebar-brand .brand-subtitle,
+      .nav-item span,
+      .nav-section,
+      .nav-badge,
+      .sidebar-footer { display: none; }
+      .nav-item { justify-content: center; padding: 14px; }
+      .main { margin-left: 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🗳️</div>
+    <div class="brand-name">IECMS</div>
+    <div class="brand-subtitle">Electoral Commission System</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard', this)">
+      <span class="icon">📊</span><span>Dashboard</span>
+    </div>
+
+    <div class="nav-section">Registry</div>
+    <div class="nav-item" onclick="showPage('voters', this)">
+      <span class="icon">👥</span><span>Voter Registry</span>
+      <span class="nav-badge" id="nav-voter-count">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('accreditation', this)">
+      <span class="icon">✅</span><span>Accreditation</span>
+    </div>
+    <div class="nav-item" onclick="showPage('parties', this)">
+      <span class="icon">🏛️</span><span>Parties</span>
+    </div>
+    <div class="nav-item" onclick="showPage('contestants', this)">
+      <span class="icon">🧑‍⚖️</span><span>Contestants</span>
+      <span class="nav-badge danger" id="nav-ineligible-count">0</span>
+    </div>
+
+    <div class="nav-section">Elections</div>
+    <div class="nav-item" onclick="showPage('elections', this)">
+      <span class="icon">🗳️</span><span>Elections</span>
+    </div>
+    <div class="nav-item" onclick="showPage('results', this)">
+      <span class="icon">📈</span><span>Results & Upload</span>
+    </div>
+
+    <div class="nav-section">Integrity</div>
+    <div class="nav-item" onclick="showPage('audit', this)">
+      <span class="icon">🔍</span><span>Audit Trail</span>
+    </div>
+    <div class="nav-item" onclick="showPage('eligibility', this)">
+      <span class="icon">⚖️</span><span>Eligibility Checker</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>System Online
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-actions">
+      <span style="font-size:11px;color:var(--text3)" id="current-time"></span>
+      <div class="badge badge-success">● LIVE</div>
+      <button class="btn btn-outline btn-sm">SuperAdmin</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-label">Registered Voters</div>
+          <div class="stat-value" id="stat-voters">—</div>
+          <div class="stat-sub">Total in registry</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Accredited Voters</div>
+          <div class="stat-value" id="stat-accredited">—</div>
+          <div class="stat-sub" id="stat-accr-rate">0% accreditation rate</div>
+        </div>
+        <div class="stat-card indigo">
+          <div class="stat-label">Contestants</div>
+          <div class="stat-value" id="stat-contestants">—</div>
+          <div class="stat-sub" id="stat-eligible-sub">Loading...</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Ineligible</div>
+          <div class="stat-value" id="stat-ineligible">—</div>
+          <div class="stat-sub">Disqualified contestants</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Eligibility Rules</div>
+            <div class="badge badge-info">System Rules</div>
+          </div>
+          <div class="panel-body">
+            <div class="check-row"><span class="check-icon">📅</span><span>Voters must be <strong style="color:var(--accent)">18 years or older</strong></span></div>
+            <div class="check-row"><span class="check-icon">🪪</span><span>Voters must be <strong style="color:var(--accent)">accredited</strong> to vote</span></div>
+            <div class="check-row"><span class="check-icon">🏆</span><span>Contestants must <strong style="color:var(--accent)">pass party primary</strong></span></div>
+            <div class="check-row"><span class="check-icon">🚫</span><span>No <strong style="color:var(--danger)">criminal convictions</strong> allowed</span></div>
+            <div class="check-row"><span class="check-icon">📋</span><span>Assets must be <strong style="color:var(--accent2)">publicly declared</strong></span></div>
+            <div class="check-row"><span class="check-icon">☁️</span><span>Results upload to <strong style="color:var(--accent)">central server</strong></span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Recent Activity</div>
+          </div>
+          <div class="panel-body">
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-time">Just now</div>
+                <div class="timeline-text">System initialized — all modules active</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-time">System ready</div>
+                <div class="timeline-text">4 parties loaded from seed data</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot warn"></div>
+                <div class="timeline-time">Awaiting data</div>
+                <div class="timeline-text">Connect to PostgreSQL to load live data</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API ENDPOINTS REFERENCE -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">API Endpoint Reference</div>
+          <div class="badge badge-neutral">Backend: localhost:5000</div>
+        </div>
+        <div class="panel-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Role Required</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge-success">POST</span></td><td>/api/auth/login</td><td>Authenticate official</td><td>Any</td></tr>
+                <tr><td><span class="badge badge-info">GET</span></td><td>/api/voters</td><td>List all voters (paginated)</td><td>Any official</td></tr>
+                <tr><td><span class="badge badge-success">POST</span></td><td>/api/voters</td><td>Register new voter (age ≥18)</td><td>Officer+</td></tr>
+                <tr><td><span class="badge badge-warning">PATCH</span></td><td>/api/voters/:id/accredit</td><td>Accredit a voter</td><td>Officer+</td></tr>
+                <tr><td><span class="badge badge-success">POST</span></td><td>/api/contestants</td><td>Register contestant</td><td>ReturningOfficer+</td></tr>
+                <tr><td><span class="badge badge-warning">PATCH</span></td><td>/api/contestants/:id/eligibility</td><td>Update eligibility flags</td><td>Commissioner+</td></tr>
+                <tr><td><span class="badge badge-success">POST</span></td><td>/api/elections</td><td>Create election</td><td>Commissioner+</td></tr>
+                <tr><td><span class="badge badge-success">POST</span></td><td>/api/elections/:id/results</td><td>Submit polling unit results</td><td>Officer+</td></tr>
+                <tr><td><span class="badge badge-success">POST</span></td><td>/api/elections/:id/upload-to-central</td><td>Upload to central server</td><td>Commissioner+</td></tr>
+                <tr><td><span class="badge badge-success">POST</span></td><td>/api/parties</td><td>Register political party</td><td>Commissioner+</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOTERS PAGE -->
+    <div class="page" id="page-voters">
+      <div class="alert alert-info">
+        ℹ️ Voters must be <strong>18 years or older</strong> to register. Accreditation is mandatory to vote. Unaccredited voters are ineligible.
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Voter Registry</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-register-voter')">+ Register Voter</button>
+        </div>
+        <div class="panel-body" style="padding-bottom:8px;">
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+            <input type="text" placeholder="Search name or voter ID..." style="max-width:250px;" id="voter-search" oninput="filterVoters()" />
+            <select id="voter-filter-state" onchange="filterVoters()" style="max-width:160px;">
+              <option value="">All States</option>
+              <option>Lagos</option><option>Abuja</option><option>Kano</option>
+              <option>Rivers</option><option>Ogun</option><option>Anambra</option>
+            </select>
+            <select id="voter-filter-accr" onchange="filterVoters()" style="max-width:160px;">
+              <option value="">All Voters</option>
+              <option value="true">Accredited Only</option>
+              <option value="false">Unaccredited Only</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Voter ID</th><th>Name</th><th>Age</th><th>State / LGA</th>
+              <th>Ward</th><th>Accreditation</th><th>Eligibility</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="voters-tbody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">Connect to backend to load voter data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCREDITATION PAGE -->
+    <div class="page" id="page-accreditation">
+      <div class="alert alert-warning">
+        ⚠️ Only accredited voters may cast votes. Accreditation verifies physical presence at the polling unit on election day.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Accredit Voter</div></div>
+          <div class="panel-body">
+            <div class="form-grid" style="grid-template-columns:1fr;">
+              <div class="form-group">
+                <label>Voter ID or National ID</label>
+                <input type="text" id="accredit-voter-id" placeholder="Enter Voter ID..." />
+              </div>
+              <div class="form-group">
+                <label>Election</label>
+                <select id="accredit-election">
+                  <option value="">Select Election...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Polling Unit</label>
+                <input type="text" id="accredit-pu" placeholder="Polling unit code..." />
+              </div>
+              <div class="form-group">
+                <label>Method</label>
+                <select id="accredit-method">
+                  <option value="Biometric">Biometric</option>
+                  <option value="Card Reader">Card Reader</option>
+                  <option value="Manual">Manual</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="accreditVoter()">✅ Accredit Voter</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Accreditation Rules</div></div>
+          <div class="panel-body">
+            <div class="check-row"><span class="check-icon">🪪</span><span>Voter must be on registry</span></div>
+            <div class="check-row"><span class="check-icon">📅</span><span>Must be 18+ at time of election</span></div>
+            <div class="check-row"><span class="check-icon">1️⃣</span><span>One accreditation per election</span></div>
+            <div class="check-row"><span class="check-icon">📍</span><span>Must accredit at assigned polling unit</span></div>
+            <div class="check-row"><span class="check-icon">🚫</span><span>Cannot vote without accreditation</span></div>
+            <div style="margin-top:20px;">
+              <div class="progress-wrap">
+                <div class="progress-label"><span>Accreditation Progress</span><span id="accr-pct-label">0%</span></div>
+                <div class="progress-bar"><div class="progress-fill" id="accr-progress" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARTIES PAGE -->
+    <div class="page" id="page-parties">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Registered Political Parties</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-party')">+ Register Party</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Party</th><th>Abbreviation</th><th>Reg. Number</th>
+              <th>Reg. Date</th><th>Contestants</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="parties-tbody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:30px;">Loading parties...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTESTANTS PAGE -->
+    <div class="page" id="page-contestants">
+      <div class="alert alert-warning">
+        ⚠️ To be eligible: contestant must (1) pass party primary, (2) have no criminal conviction, and (3) publicly declare assets.
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Contestant Registry</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-contestant')">+ Register Contestant</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Name</th><th>Party</th><th>Position</th>
+              <th>Passed Primary</th><th>Assets Declared</th><th>Criminal Record</th><th>Eligible</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="contestants-tbody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">Connect to backend to load contestant data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELECTIONS PAGE -->
+    <div class="page" id="page-elections">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Elections</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-create-election')">+ Create Election</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Title</th><th>Type</th><th>Date</th>
+              <th>State</th><th>Status</th><th>Votes Cast</th><th>Uploaded</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="elections-tbody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">No elections created yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS PAGE -->
+    <div class="page" id="page-results">
+      <div class="alert alert-info">
+        ☁️ Results must be uploaded to the Independent Electoral Commission central server. Each upload generates a cryptographic hash for integrity verification.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Submit Results</div></div>
+          <div class="panel-body">
+            <div class="form-grid" style="grid-template-columns:1fr;">
+              <div class="form-group">
+                <label>Election</label>
+                <select id="result-election-id">
+                  <option value="">Select election...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Polling Unit ID</label>
+                <input type="text" id="result-pu-id" placeholder="UUID of polling unit..." />
+              </div>
+              <div class="form-group">
+                <label>Result Document URL</label>
+                <input type="text" id="result-doc-url" placeholder="https://..." />
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Votes Per Contestant</div>
+                <div id="result-rows">
+                  <div style="font-size:12px;color:var(--text3)">Select an election to enter votes</div>
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="submitResults()">📤 Submit Results</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Upload to Central Server</div></div>
+          <div class="panel-body">
+            <div class="form-grid" style="grid-template-columns:1fr;">
+              <div class="form-group">
+                <label>Select Election</label>
+                <select id="upload-election-id">
+                  <option value="">Select election...</option>
+                </select>
+              </div>
+              <div class="alert alert-warning" style="font-size:11px;">
+                ⚠️ This action sends all results to the IEC central server and generates an immutable SHA-512 integrity hash. This action cannot be undone.
+              </div>
+              <button class="btn btn-warning" onclick="uploadToServer()">☁️ Upload to Central Server</button>
+            </div>
+            <div id="upload-result" style="margin-top:16px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Visualization -->
+      <div class="panel" id="results-viz-panel" style="display:none">
+        <div class="panel-header">
+          <div class="panel-title">Results Summary</div>
+          <div class="badge badge-success" id="results-upload-badge">Not Uploaded</div>
+        </div>
+        <div class="panel-body" id="results-viz"></div>
+      </div>
+    </div>
+
+    <!-- AUDIT PAGE -->
+    <div class="page" id="page-audit">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Audit Trail</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Timestamp</th><th>Table</th><th>Action</th>
+              <th>Performed By</th><th>IP</th><th>Notes</th>
+            </tr></thead>
+            <tbody id="audit-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text3);padding:30px;">Audit log loads from backend</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELIGIBILITY CHECKER PAGE -->
+    <div class="page" id="page-eligibility">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Voter Eligibility Check</div></div>
+          <div class="panel-body">
+            <div class="form-grid" style="grid-template-columns:1fr;">
+              <div class="form-group">
+                <label>Voter ID or National ID</label>
+                <input type="text" id="check-voter-id" placeholder="Enter ID to check..." />
+              </div>
+              <button class="btn btn-primary" onclick="checkVoterEligibility()">⚖️ Check Eligibility</button>
+            </div>
+            <div class="checker-card" id="voter-check-result" style="display:none">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px;" id="voter-check-name">—</div>
+              <div class="check-row">
+                <span class="check-icon" id="check-age-icon">—</span>
+                <span>Age 18 or above</span>
+                <span style="margin-left:auto;" id="check-age-val">—</span>
+              </div>
+              <div class="check-row">
+                <span class="check-icon" id="check-accr-icon">—</span>
+                <span>Accredited voter</span>
+                <span style="margin-left:auto;" id="check-accr-val">—</span>
+              </div>
+              <div class="check-row" style="border:none;margin-top:8px;">
+                <strong id="check-voter-verdict" style="font-size:13px;">—</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Contestant Eligibility Check</div></div>
+          <div class="panel-body">
+            <div class="form-grid" style="grid-template-columns:1fr;">
+              <div class="form-group">
+                <label>Contestant National ID or Name</label>
+                <input type="text" id="check-contestant-id" placeholder="Enter ID or name..." />
+              </div>
+              <button class="btn btn-primary" onclick="checkContestantEligibility()">⚖️ Check Eligibility</button>
+            </div>
+            <div class="checker-card" id="contestant-check-result" style="display:none">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px;" id="contestant-check-name">—</div>
+              <div class="check-row">
+                <span class="check-icon" id="chk-primary-icon">—</span>
+                <span>Passed Party Primary</span>
+                <span style="margin-left:auto;" id="chk-primary-val">—</span>
+              </div>
+              <div class="check-row">
+                <span class="check-icon" id="chk-criminal-icon">—</span>
+                <span>No Criminal Record</span>
+                <span style="margin-left:auto;" id="chk-criminal-val">—</span>
+              </div>
+              <div class="check-row">
+                <span class="check-icon" id="chk-assets-icon">—</span>
+                <span>Assets Publicly Declared</span>
+                <span style="margin-left:auto;" id="chk-assets-val">—</span>
+              </div>
+              <div class="check-row" style="border:none;margin-top:8px;">
+                <strong id="chk-contestant-verdict" style="font-size:13px;">—</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ====== MODALS ====== -->
+
+<!-- Register Voter Modal -->
+<div class="modal-backdrop" id="modal-register-voter">
+  <div class="modal">
+    <div class="modal-title">Register New Voter</div>
+    <div class="modal-subtitle">Voter must be 18 years or older. Age is automatically verified.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>National ID *</label><input type="text" id="v-national-id" placeholder="NIN-..." /></div>
+      <div class="form-group"><label>First Name *</label><input type="text" id="v-first-name" /></div>
+      <div class="form-group"><label>Last Name *</label><input type="text" id="v-last-name" /></div>
+      <div class="form-group"><label>Date of Birth *</label><input type="date" id="v-dob" /></div>
+      <div class="form-group"><label>Gender *</label>
+        <select id="v-gender"><option>Male</option><option>Female</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label>Phone</label><input type="text" id="v-phone" /></div>
+      <div class="form-group"><label>Email</label><input type="email" id="v-email" /></div>
+      <div class="form-group"><label>State *</label>
+        <select id="v-state">
+          <option>Lagos</option><option>Abuja</option><option>Kano</option>
+          <option>Rivers</option><option>Ogun</option><option>Anambra</option>
+          <option>Kaduna</option><option>Oyo</option>
+        </select>
+      </div>
+      <div class="form-group"><label>LGA *</label><input type="text" id="v-lga" /></div>
+      <div class="form-group"><label>Ward *</label><input type="text" id="v-ward" /></div>
+      <div class="form-group"><label>Polling Unit</label><input type="text" id="v-pu" /></div>
+      <div class="form-group full"><label>Address *</label><textarea id="v-address" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-register-voter')">Cancel</button>
+      <button class="btn btn-primary" onclick="registerVoter()">✅ Register Voter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Party Modal -->
+<div class="modal-backdrop" id="modal-add-party">
+  <div class="modal">
+    <div class="modal-title">Register Political Party</div>
+    <div class="modal-subtitle">Only parties registered with the electoral commission may field candidates.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Party Name *</label><input type="text" id="p-name" /></div>
+      <div class="form-group"><label>Abbreviation *</label><input type="text" id="p-abbr" placeholder="e.g. APC" /></div>
+      <div class="form-group"><label>Registration Number *</label><input type="text" id="p-reg-num" /></div>
+      <div class="form-group"><label>Registration Date *</label><input type="date" id="p-reg-date" /></div>
+      <div class="form-group"><label>Contact Email</label><input type="email" id="p-email" /></div>
+      <div class="form-group"><label>Contact Phone</label><input type="text" id="p-phone" /></div>
+      <div class="form-group full"><label>Headquarters Address</label><textarea id="p-address" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-party')">Cancel</button>
+      <button class="btn btn-primary" onclick="addParty()">✅ Register Party</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Contestant Modal -->
+<div class="modal-backdrop" id="modal-add-contestant">
+  <div class="modal">
+    <div class="modal-title">Register Contestant</div>
+    <div class="modal-subtitle">All three eligibility criteria are enforced by the system automatically.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>National ID *</label><input type="text" id="c-national-id" /></div>
+      <div class="form-group"><label>First Name *</label><input type="text" id="c-first-name" /></div>
+      <div class="form-group"><label>Last Name *</label><input type="text" id="c-last-name" /></div>
+      <div class="form-group"><label>Date of Birth *</label><input type="date" id="c-dob" /></div>
+      <div class="form-group"><label>Party *</label>
+        <select id="c-party">
+          <option value="">Select party...</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Position *</label>
+        <select id="c-position">
+          <option>Presidential</option><option>Gubernatorial</option>
+          <option>Senatorial</option><option>House of Representatives</option>
+          <option>State Assembly</option><option>Local Government</option>
+        </select>
+      </div>
+      <div class="form-group"><label>State *</label>
+        <select id="c-state">
+          <option>Lagos</option><option>Abuja</option><option>Kano</option>
+          <option>Rivers</option><option>National</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Constituency</label><input type="text" id="c-constituency" /></div>
+      <div class="form-group"><label>Passed Primary Election?</label>
+        <select id="c-primary"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="form-group"><label>Assets Declared Publicly?</label>
+        <select id="c-assets"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="form-group"><label>Criminal Record?</label>
+        <select id="c-criminal"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="form-group"><label>Asset Declaration URL</label><input type="text" id="c-asset-url" placeholder="https://..." /></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-contestant')">Cancel</button>
+      <button class="btn btn-primary" onclick="addContestant()">✅ Register Contestant</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Election Modal -->
+<div class="modal-backdrop" id="modal-create-election">
+  <div class="modal">
+    <div class="modal-title">Create Election</div>
+    <div class="modal-subtitle">Election details are broadcast to all polling units and officials.</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Election Title *</label><input type="text" id="e-title" placeholder="e.g. 2027 Presidential Election" /></div>
+      <div class="form-group"><label>Election Type *</label>
+        <select id="e-type">
+          <option>Presidential</option><option>Gubernatorial</option>
+          <option>Senatorial</option><option>House of Representatives</option>
+          <option>State Assembly</option><option>Local Government</option><option>Primary</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Election Date *</label><input type="date" id="e-date" /></div>
+      <div class="form-group"><label>Start Time *</label><input type="time" id="e-start" value="08:00" /></div>
+      <div class="form-group"><label>End Time *</label><input type="time" id="e-end" value="17:00" /></div>
+      <div class="form-group"><label>State (blank = national)</label><input type="text" id="e-state" /></div>
+      <div class="form-group"><label>Constituency</label><input type="text" id="e-constituency" /></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-create-election')">Cancel</button>
+      <button class="btn btn-primary" onclick="createElection()">✅ Create Election</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let token = localStorage.getItem('iecms_token') || null;
+
+// ─── In-memory demo data (replaces API when backend not connected) ─────────
+const demo = {
+  voters: [
+    { voter_id:'VTR-LAG-00000001', first_name:'Amaka', last_name:'Okonkwo', age:34, gender:'Female', state:'Lagos', lga:'Ikeja', ward:'Ward 3', is_accredited:true, is_eligible:true },
+    { voter_id:'VTR-ABJ-00000002', first_name:'Ibrahim', last_name:'Musa', age:27, gender:'Male', state:'Abuja', lga:'AMAC', ward:'Ward 5', is_accredited:false, is_eligible:false },
+    { voter_id:'VTR-KAN-00000003', first_name:'Fatima', last_name:'Bello', age:22, gender:'Female', state:'Kano', lga:'Fagge', ward:'Ward 1', is_accredited:true, is_eligible:true },
+    { voter_id:'VTR-RIV-00000004', first_name:'Chukwuemeka', last_name:'Eze', age:45, gender:'Male', state:'Rivers', lga:'Port Harcourt', ward:'Ward 2', is_accredited:false, is_eligible:false },
+  ],
+  contestants: [
+    { first_name:'Bola', last_name:'Adeyemi', party_name:'APC', party_abbr:'APC', position_sought:'Presidential', passed_primary:true, assets_declared:true, has_criminal_record:false, is_eligible:true },
+    { first_name:'Atiku', last_name:'Usman', party_name:'PDP', party_abbr:'PDP', position_sought:'Presidential', passed_primary:true, assets_declared:true, has_criminal_record:false, is_eligible:true },
+    { first_name:'Peter', last_name:'Obi', party_name:'Labour Party', party_abbr:'LP', position_sought:'Presidential', passed_primary:false, assets_declared:true, has_criminal_record:false, is_eligible:false, ineligibility_reason:'Did not pass party primary election' },
+    { first_name:'Marcus', last_name:'Adaora', party_name:'NNPP', party_abbr:'NNPP', position_sought:'Gubernatorial', passed_primary:true, assets_declared:false, has_criminal_record:false, is_eligible:false, ineligibility_reason:'Assets not publicly declared' },
+  ],
+  parties: [
+    { name:'All Progressives Congress', abbreviation:'APC', registration_number:'INEC/PARTY/001', registration_date:'2013-07-31', is_active:true, registered_contestants:1 },
+    { name:'Peoples Democratic Party', abbreviation:'PDP', registration_number:'INEC/PARTY/002', registration_date:'1998-08-19', is_active:true, registered_contestants:1 },
+    { name:'Labour Party', abbreviation:'LP', registration_number:'INEC/PARTY/003', registration_date:'2002-08-01', is_active:true, registered_contestants:1 },
+    { name:'New Nigeria Peoples Party', abbreviation:'NNPP', registration_number:'INEC/PARTY/004', registration_date:'2001-01-15', is_active:true, registered_contestants:1 },
+  ],
+  elections: [
+    { title:'2027 Presidential Election', election_type:'Presidential', election_date:'2027-02-20', status:'Scheduled', total_votes_cast:0, results_uploaded:false, state:null },
+    { title:'2027 Lagos Gubernatorial', election_type:'Gubernatorial', election_date:'2027-03-08', status:'Scheduled', total_votes_cast:0, results_uploaded:false, state:'Lagos' },
+  ]
+};
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {
+    dashboard:'Dashboard', voters:'Voter Registry', accreditation:'Voter Accreditation',
+    parties:'Political Parties', contestants:'Contestants', elections:'Elections',
+    results:'Results & Upload', audit:'Audit Trail', eligibility:'Eligibility Checker'
+  };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  if (page === 'voters') renderVoters(demo.voters);
+  if (page === 'contestants') renderContestants(demo.contestants);
+  if (page === 'parties') renderParties(demo.parties);
+  if (page === 'elections') renderElections(demo.elections);
+}
+
+// ─── Time ─────────────────────────────────────────────────────────────────────
+function updateTime() {
+  document.getElementById('current-time').textContent =
+    new Date().toLocaleTimeString('en-NG', { hour12: false });
+}
+setInterval(updateTime, 1000); updateTime();
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(b => {
+  b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); });
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 3500);
+}
+
+// ─── Dashboard Stats ──────────────────────────────────────────────────────────
+function loadStats() {
+  const voters = demo.voters.length;
+  const accredited = demo.voters.filter(v => v.is_accredited).length;
+  const contestants = demo.contestants.length;
+  const ineligible = demo.contestants.filter(c => !c.is_eligible).length;
+  const rate = voters > 0 ? ((accredited/voters)*100).toFixed(1) : 0;
+
+  document.getElementById('stat-voters').textContent = voters;
+  document.getElementById('stat-accredited').textContent = accredited;
+  document.getElementById('stat-contestants').textContent = contestants;
+  document.getElementById('stat-ineligible').textContent = ineligible;
+  document.getElementById('stat-accr-rate').textContent = `${rate}% accreditation rate`;
+  document.getElementById('stat-eligible-sub').textContent = `${contestants - ineligible} eligible, ${ineligible} disqualified`;
+  document.getElementById('nav-voter-count').textContent = voters;
+  document.getElementById('nav-ineligible-count').textContent = ineligible;
+  document.getElementById('accr-pct-label').textContent = rate + '%';
+  document.getElementById('accr-progress').style.width = rate + '%';
+}
+
+// ─── Render Voters ────────────────────────────────────────────────────────────
+function renderVoters(voters) {
+  const tbody = document.getElementById('voters-tbody');
+  if (!voters.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">No voters found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = voters.map(v => `
+    <tr>
+      <td style="color:var(--accent);font-family:'IBM Plex Mono'">${v.voter_id}</td>
+      <td>${v.first_name} ${v.last_name}</td>
+      <td>${v.age}</td>
+      <td>${v.state} / ${v.lga}</td>
+      <td>${v.ward}</td>
+      <td>${v.is_accredited ? '<span class="badge badge-success">✓ Accredited</span>' : '<span class="badge badge-danger">✗ Not Accredited</span>'}</td>
+      <td>${v.is_eligible ? '<span class="badge badge-success">Eligible</span>' : '<span class="badge badge-danger">Ineligible</span>'}</td>
+      <td>
+        ${!v.is_accredited ? `<button class="btn btn-outline btn-sm" onclick="quickAccredit('${v.voter_id}')">Accredit</button>` : '<span style="color:var(--text3);font-size:11px;">Done</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterVoters() {
+  const search = document.getElementById('voter-search').value.toLowerCase();
+  const state = document.getElementById('voter-filter-state').value;
+  const accr = document.getElementById('voter-filter-accr').value;
+  let filtered = demo.voters.filter(v => {
+    const name = `${v.first_name} ${v.last_name} ${v.voter_id}`.toLowerCase();
+    return (!search || name.includes(search)) &&
+           (!state || v.state === state) &&
+           (accr === '' || String(v.is_accredited) === accr);
+  });
+  renderVoters(filtered);
+}
+
+function quickAccredit(voter_id) {
+  const v = demo.voters.find(v => v.voter_id === voter_id);
+  if (v) { v.is_accredited = true; v.is_eligible = true; }
+  filterVoters();
+  loadStats();
+  toast(`Voter ${voter_id} accredited successfully`);
+}
+
+// ─── Render Contestants ───────────────────────────────────────────────────────
+function renderContestants(contestants) {
+  const tbody = document.getElementById('contestants-tbody');
+  tbody.innerHTML = contestants.map(c => `
+    <tr>
+      <td>${c.first_name} ${c.last_name}</td>
+      <td><span class="badge badge-info">${c.party_abbr}</span></td>
+      <td>${c.position_sought}</td>
+      <td>${c.passed_primary ? '<span class="badge badge-success">✓ Yes</span>' : '<span class="badge badge-danger">✗ No</span>'}</td>
+      <td>${c.assets_declared ? '<span class="badge badge-success">✓ Declared</span>' : '<span class="badge badge-warning">⚠ Pending</span>'}</td>
+      <td>${c.has_criminal_record ? '<span class="badge badge-danger">⚠ Found</span>' : '<span class="badge badge-success">✓ Clear</span>'}</td>
+      <td>${c.is_eligible
+        ? '<span class="badge badge-success">✅ Eligible</span>'
+        : `<span class="badge badge-danger" title="${c.ineligibility_reason || ''}">✗ Ineligible</span>`}
+      </td>
+      <td><button class="btn btn-outline btn-sm">View</button></td>
+    </tr>
+  `).join('');
+}
+
+// ─── Render Parties ───────────────────────────────────────────────────────────
+function renderParties(parties) {
+  const tbody = document.getElementById('parties-tbody');
+  tbody.innerHTML = parties.map(p => `
+    <tr>
+      <td style="color:var(--text);font-weight:600">${p.name}</td>
+      <td><span class="badge badge-info">${p.abbreviation}</span></td>
+      <td style="font-family:'IBM Plex Mono';font-size:11px">${p.registration_number}</td>
+      <td>${new Date(p.registration_date).toLocaleDateString()}</td>
+      <td>${p.registered_contestants || 0}</td>
+      <td>${p.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Inactive</span>'}</td>
+      <td><button class="btn btn-outline btn-sm">Details</button></td>
+    </tr>
+  `).join('');
+}
+
+// ─── Render Elections ─────────────────────────────────────────────────────────
+function renderElections(elections) {
+  const tbody = document.getElementById('elections-tbody');
+  if (!elections.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">No elections yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = elections.map(e => `
+    <tr>
+      <td style="color:var(--text)">${e.title}</td>
+      <td><span class="badge badge-neutral">${e.election_type}</span></td>
+      <td>${new Date(e.election_date).toLocaleDateString()}</td>
+      <td>${e.state || 'National'}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td>${e.total_votes_cast?.toLocaleString() || 0}</td>
+      <td>${e.results_uploaded ? '<span class="badge badge-success">✓ Uploaded</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
+      <td><button class="btn btn-outline btn-sm">Manage</button></td>
+    </tr>
+  `).join('');
+}
+
+function statusBadge(s) {
+  const map = {
+    'Scheduled':'badge-info', 'Ongoing':'badge-success',
+    'Completed':'badge-neutral', 'Cancelled':'badge-danger', 'Disputed':'badge-warning'
+  };
+  return `<span class="badge ${map[s]||'badge-neutral'}">${s}</span>`;
+}
+
+// ─── Register Voter ───────────────────────────────────────────────────────────
+function registerVoter() {
+  const dob = new Date(document.getElementById('v-dob').value);
+  const age = Math.floor((Date.now() - dob) / (1000 * 60 * 60 * 24 * 365.25));
+  if (age < 18) { toast(`Voter is ${age} years old — must be 18+`, 'error'); return; }
+
+  const voter = {
+    voter_id: `VTR-${document.getElementById('v-state').value.slice(0,3).toUpperCase()}-${Date.now().toString().slice(-8)}`,
+    first_name: document.getElementById('v-first-name').value,
+    last_name: document.getElementById('v-last-name').value,
+    age, gender: document.getElementById('v-gender').value,
+    state: document.getElementById('v-state').value,
+    lga: document.getElementById('v-lga').value,
+    ward: document.getElementById('v-ward').value,
+    is_accredited: false, is_eligible: false
+  };
+
+  if (!voter.first_name || !voter.last_name || !voter.lga || !voter.ward) {
+    toast('Please fill all required fields', 'error'); return;
+  }
+
+  demo.voters.unshift(voter);
+  closeModal('modal-register-voter');
+  toast(`Voter ${voter.first_name} ${voter.last_name} registered (Age: ${age})`);
+  loadStats();
+  renderVoters(demo.voters);
+}
+
+// ─── Add Party ────────────────────────────────────────────────────────────────
+function addParty() {
+  const name = document.getElementById('p-name').value.trim();
+  const abbr = document.getElementById('p-abbr').value.trim();
+  if (!name || !abbr) { toast('Party name and abbreviation required', 'error'); return; }
+  demo.parties.push({
+    name, abbreviation: abbr,
+    registration_number: document.getElementById('p-reg-num').value,
+    registration_date: document.getElementById('p-reg-date').value,
+    is_active: true, registered_contestants: 0
+  });
+  closeModal('modal-add-party');
+  renderParties(demo.parties);
+  toast(`Party "${name}" registered`);
+}
+
+// ─── Add Contestant ───────────────────────────────────────────────────────────
+function addContestant() {
+  const passed = document.getElementById('c-primary').value === 'true';
+  const assets = document.getElementById('c-assets').value === 'true';
+  const criminal = document.getElementById('c-criminal').value === 'true';
+  const partyVal = document.getElementById('c-party').value;
+
+  let is_eligible = passed && assets && !criminal;
+  let reason = !passed ? 'Did not pass party primary' : !assets ? 'Assets not publicly declared' : criminal ? 'Has criminal record' : null;
+
+  const c = {
+    first_name: document.getElementById('c-first-name').value,
+    last_name: document.getElementById('c-last-name').value,
+    party_abbr: partyVal || 'IND',
+    party_name: partyVal,
+    position_sought: document.getElementById('c-position').value,
+    passed_primary: passed, assets_declared: assets,
+    has_criminal_record: criminal, is_eligible,
+    ineligibility_reason: reason
+  };
+
+  if (!c.first_name || !c.last_name) { toast('Name fields are required', 'error'); return; }
+
+  demo.contestants.unshift(c);
+  closeModal('modal-add-contestant');
+  renderContestants(demo.contestants);
+  loadStats();
+  toast(is_eligible ? `${c.first_name} registered — ELIGIBLE ✅` : `${c.first_name} registered — INELIGIBLE: ${reason}`,
+    is_eligible ? 'success' : 'warning');
+}
+
+// ─── Create Election ──────────────────────────────────────────────────────────
+function createElection() {
+  const title = document.getElementById('e-title').value.trim();
+  const date = document.getElementById('e-date').value;
+  if (!title || !date) { toast('Title and date are required', 'error'); return; }
+  demo.elections.unshift({
+    title, election_type: document.getElementById('e-type').value,
+    election_date: date, status: 'Scheduled',
+    total_votes_cast: 0, results_uploaded: false,
+    state: document.getElementById('e-state').value || null
+  });
+  closeModal('modal-create-election');
+  renderElections(demo.elections);
+  toast(`Election "${title}" created`);
+}
+
+// ─── Voter Accreditation ──────────────────────────────────────────────────────
+function accreditVoter() {
+  const id = document.getElementById('accredit-voter-id').value.trim();
+  if (!id) { toast('Please enter a voter ID', 'error'); return; }
+  const v = demo.voters.find(v => v.voter_id === id || v.national_id === id);
+  if (!v) { toast('Voter not found', 'error'); return; }
+  if (v.is_accredited) { toast('Voter already accredited', 'warning'); return; }
+  v.is_accredited = true; v.is_eligible = true;
+  loadStats();
+  toast(`Voter "${v.first_name} ${v.last_name}" accredited successfully ✅`);
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
+function submitResults() {
+  toast('Results submitted to backend (demo mode)', 'success');
+}
+function uploadToServer() {
+  const elId = document.getElementById('upload-election-id').value;
+  if (!elId) { toast('Select an election first', 'warning'); return; }
+  const hash = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2,'0')).join('');
+  const ack = `CENTR-${Date.now()}`;
+  document.getElementById('upload-result').innerHTML = `
+    <div class="alert alert-success">
+      <div>
+        <strong>✅ Results uploaded to central server</strong><br/>
+        <span style="font-size:11px">Ack Code: <code style="color:var(--accent)">${ack}</code></span><br/>
+        <span style="font-size:11px">SHA-512 Hash: <code style="color:var(--text3);word-break:break-all">${hash}</code></span>
+      </div>
+    </div>`;
+  toast('Results uploaded successfully ☁️');
+}
+
+// ─── Eligibility Checker ──────────────────────────────────────────────────────
+function checkVoterEligibility() {
+  const id = document.getElementById('check-voter-id').value.trim().toLowerCase();
+  const v = demo.voters.find(v =>
+    v.voter_id.toLowerCase().includes(id) ||
+    `${v.first_name} ${v.last_name}`.toLowerCase().includes(id)
+  );
+  const card = document.getElementById('voter-check-result');
+  card.style.display = 'block';
+  if (!v) { document.getElementById('voter-check-name').textContent = 'Voter not found'; return; }
+  document.getElementById('voter-check-name').textContent = `${v.first_name} ${v.last_name} — ${v.voter_id}`;
+  document.getElementById('check-age-icon').textContent = v.age >= 18 ? '✅' : '❌';
+  document.getElementById('check-age-val').textContent = `Age ${v.age}`;
+  document.getElementById('check-accr-icon').textContent = v.is_accredited ? '✅' : '❌';
+  document.getElementById('check-accr-val').textContent = v.is_accredited ? 'Accredited' : 'Not Accredited';
+  document.getElementById('check-voter-verdict').innerHTML = v.is_eligible
+    ? '<span style="color:var(--success)">✅ ELIGIBLE TO VOTE</span>'
+    : '<span style="color:var(--danger)">✗ NOT ELIGIBLE TO VOTE</span>';
+}
+
+function checkContestantEligibility() {
+  const id = document.getElementById('check-contestant-id').value.trim().toLowerCase();
+  const c = demo.contestants.find(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(id)
+  );
+  const card = document.getElementById('contestant-check-result');
+  card.style.display = 'block';
+  if (!c) { document.getElementById('contestant-check-name').textContent = 'Contestant not found'; return; }
+  document.getElementById('contestant-check-name').textContent = `${c.first_name} ${c.last_name} (${c.party_abbr})`;
+  document.getElementById('chk-primary-icon').textContent = c.passed_primary ? '✅' : '❌';
+  document.getElementById('chk-primary-val').textContent = c.passed_primary ? 'Passed' : 'Failed';
+  document.getElementById('chk-criminal-icon').textContent = !c.has_criminal_record ? '✅' : '❌';
+  document.getElementById('chk-criminal-val').textContent = c.has_criminal_record ? 'Record Found' : 'Clear';
+  document.getElementById('chk-assets-icon').textContent = c.assets_declared ? '✅' : '❌';
+  document.getElementById('chk-assets-val').textContent = c.assets_declared ? 'Declared' : 'Not Declared';
+  document.getElementById('chk-contestant-verdict').innerHTML = c.is_eligible
+    ? '<span style="color:var(--success)">✅ ELIGIBLE FOR BALLOT</span>'
+    : `<span style="color:var(--danger)">✗ INELIGIBLE: ${c.ineligibility_reason || 'See checks above'}</span>`;
+}
+
+// ─── Populate party dropdowns ─────────────────────────────────────────────────
+function populatePartyDropdown() {
+  const sel = document.getElementById('c-party');
+  sel.innerHTML = '<option value="">Select party...</option>' +
+    demo.parties.map(p => `<option value="${p.abbreviation}">${p.name} (${p.abbreviation})</option>`).join('');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadStats();
+populatePartyDropdown();
+</script>
+</body>
+</html>
